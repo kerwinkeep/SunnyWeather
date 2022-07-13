@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.kk.sunnyweather.MainActivity
 import com.kk.sunnyweather.databinding.FragmentPlaceBinding
 import com.kk.sunnyweather.ui.weather.WeatherActivity
 import kotlinx.coroutines.Dispatchers
@@ -66,21 +67,20 @@ class PlaceFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             val isPlaceSaved =
                 withContext(Dispatchers.IO) { viewModel.isPlaceSaved() }
-            if (isPlaceSaved.first()) {
+            if (activity is MainActivity && isPlaceSaved.first()) {
                 viewModel.getSavedPlace().observe(viewLifecycleOwner) { place ->
                     val intent= Intent(context, WeatherActivity::class.java).apply {
-                        Log.d("tttt", "intent传过去的place: $place")
                         putExtra("location_lng", place.location.lng)
                         putExtra("location_lat", place.location.lat)
                         putExtra("place_name", place.name)
                     }
                     startActivity(intent)
+                    Log.d("tiao", "从Main跳转到了Weather")
                     activity?.finish()
                 }
 
             }
         }
-
 
         val layoutManager = LinearLayoutManager(activity)
         val recyclerView = binding.recyclerView
