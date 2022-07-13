@@ -1,15 +1,24 @@
 package com.kk.sunnyweather.ui.place
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kk.sunnyweather.databinding.FragmentPlaceBinding
+import com.kk.sunnyweather.ui.weather.WeatherActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -27,7 +36,7 @@ class PlaceFragment : Fragment() {
 
     private val binding get() = _binding!!
 
-    private val viewModel by lazy { ViewModelProvider(this).get(PlaceViewModel::class.java) }
+    val viewModel by lazy { ViewModelProvider(this).get(PlaceViewModel::class.java) }
 
     private lateinit var adapter: PlaceAdapter
 
@@ -54,6 +63,25 @@ class PlaceFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val isPlaceSaved =
+                withContext(Dispatchers.IO) { viewModel.isPlaceSaved() }
+            if (isPlaceSaved.first()) {
+                viewModel.getSavedPlace().observe(viewLifecycleOwner) { place ->
+                    val intent= Intent(context, WeatherActivity::class.java).apply {
+                        Log.d("tttt", "intent传过去的place: $place")
+                        putExtra("location_lng", place.location.lng)
+                        putExtra("location_lat", place.location.lat)
+                        putExtra("place_name", place.name)
+                    }
+                    startActivity(intent)
+                    activity?.finish()
+                }
+
+            }
+        }
+
+
         val layoutManager = LinearLayoutManager(activity)
         val recyclerView = binding.recyclerView
         val bgImageView = binding.bgImageView
